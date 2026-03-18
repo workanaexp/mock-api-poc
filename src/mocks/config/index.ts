@@ -52,32 +52,32 @@ function resolveDomainConfig(): DomainConfig {
   // UAT: example of a stricter config.
   // You can tweak this or even read specific envs here,
   // e.g. VITE_MSW_REPORTS_LIST=true/false.
-  if (env === 'uat') {
-    return {
-      user: {
-        getUser: true,
-      },
-      reports: {
-        list: true,
-        detail: false,
-        create: false,
-      },
-    }
-  }
+  // if (env === 'uat') {
+  //   return {
+  //     user: {
+  //       getUser: true,
+  //     },
+  //     reports: {
+  //       list: true,
+  //       detail: false,
+  //       create: false,
+  //     },
+  //   }
+  // }
 
   // Production: turn everything off by default.
-  if (env === 'production' || env === 'prod') {
-    return {
-      user: {
-        getUser: false,
-      },
-      reports: {
-        list: false,
-        detail: false,
-        create: false,
-      },
-    }
-  }
+  // if (env === 'production' || env === 'prod') {
+  //   return {
+  //     user: {
+  //       getUser: false,
+  //     },
+  //     reports: {
+  //       list: false,
+  //       detail: false,
+  //       create: false,
+  //     },
+  //   }
+  // }
 
   // Default (development, test, etc.): full base config.
   return base
