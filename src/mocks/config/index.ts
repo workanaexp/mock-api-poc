@@ -41,7 +41,7 @@ type DomainConfig = {
  */
 function resolveDomainConfig(): DomainConfig {
   const mode = import.meta.env.MODE
-  const env = (import.meta.env.VITE_ENV as string | undefined) ?? mode
+  // const env = (import.meta.env.VITE_ENV as string | undefined) ?? mode
 
   // Base config: whatever each domain file declares.
   const base: DomainConfig = {
