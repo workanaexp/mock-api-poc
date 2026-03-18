@@ -17,12 +17,16 @@ export const reportHandlers: TaggedReportHandler[] = [
       const url = new URL(request.url)
       const search = (url.searchParams.get('search') ?? '').trim().toLowerCase()
 
+      // @msw/data expects an object-based predicate for object schemas.
+      // We build an OR query between `title` and `description`.
       const list = search
         ? reports.findMany((q) =>
-            q.where((record) =>
-              record.title.toLowerCase().includes(search) ||
-              record.description.toLowerCase().includes(search),
-            ),
+            q.where({
+              title: (title) => title.toLowerCase().includes(search),
+            }).or({
+              description: (description) =>
+                description.toLowerCase().includes(search),
+            }),
           )
         : reports.findMany()
 
@@ -33,7 +37,13 @@ export const reportHandlers: TaggedReportHandler[] = [
     id: 'reports:detail',
     handler: http.get('/api/reports/:id', async ({ params }) => {
       await seedReports()
-      const report = reports.findFirst((q) => q.where({ id: params.id }))
+      const idParam = params.id
+      const id = Array.isArray(idParam) ? idParam[0] : idParam
+      if (!id) {
+        return HttpResponse.json({ message: 'Report id is required' }, { status: 400 })
+      }
+
+      const report = reports.findFirst((q) => q.where({ id }))
       if (!report) {
         return HttpResponse.json(
           { message: 'Report not found' },
