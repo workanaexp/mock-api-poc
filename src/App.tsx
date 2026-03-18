@@ -8,10 +8,21 @@ type UserResponse = {
   name: string
 }
 
+type Report = {
+  id: string
+  title: string
+  description: string
+  createdAt: string
+}
+
 function App() {
   const [language, setLanguage] = useState<Language>('en')
   const [user, setUser] = useState<UserResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const [reportSearch, setReportSearch] = useState('')
+  const [reports, setReports] = useState<Report[]>([])
+  const [reportsLoading, setReportsLoading] = useState(false)
+  const [reportsFetched, setReportsFetched] = useState(false)
 
   const fetchUser = async () => {
     setLoading(true)
@@ -21,6 +32,20 @@ function App() {
       setUser(data)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const searchReports = async () => {
+    setReportsLoading(true)
+    setReportsFetched(true)
+    try {
+      const url = new URL('/api/reports', window.location.origin)
+      if (reportSearch.trim()) url.searchParams.set('search', reportSearch.trim())
+      const response = await fetch(url.toString())
+      const data = (await response.json()) as Report[]
+      setReports(Array.isArray(data) ? data : [])
+    } finally {
+      setReportsLoading(false)
     }
   }
 
@@ -37,6 +62,15 @@ function App() {
       language === 'en'
         ? 'Toggle MSW in development via'
         : 'Ative ou desative o MSW em dev via',
+    reportsTitle: language === 'en' ? 'Reports search (POC)' : 'Busca de relatórios (POC)',
+    reportsDesc:
+      language === 'en'
+        ? 'Mocked with MSW + @msw/data. Type a term (e.g. "vendas", "auditoria") and search.'
+        : 'Mockado com MSW + @msw/data. Digite um termo (ex: "vendas", "auditoria") e busque.',
+    searchPlaceholder: language === 'en' ? 'Search by title or description...' : 'Buscar por título ou descrição...',
+    searchButton: language === 'en' ? 'Search' : 'Buscar',
+    noReports: language === 'en' ? 'No reports found.' : 'Nenhum relatório encontrado.',
+    dateLabel: language === 'en' ? 'Created' : 'Criado em',
   }
 
   return (
@@ -105,6 +139,50 @@ function App() {
             </code>
             .
           </p>
+        </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>{t.reportsTitle}</h2>
+          <p className={styles.cardBody}>{t.reportsDesc}</p>
+          <div className={styles.searchRow}>
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder={t.searchPlaceholder}
+              value={reportSearch}
+              onChange={(e) => setReportSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && searchReports()}
+              aria-label={t.searchPlaceholder}
+            />
+            <button
+              type="button"
+              className={styles.apiButton}
+              onClick={searchReports}
+              disabled={reportsLoading}
+            >
+              {reportsLoading
+                ? language === 'en'
+                  ? 'Loading...'
+                  : 'Carregando...'
+                : t.searchButton}
+            </button>
+          </div>
+          {reports.length > 0 && (
+            <ul className={styles.reportList} role="list">
+              {reports.map((r) => (
+                <li key={r.id} className={styles.reportItem}>
+                  <strong className={styles.reportTitle}>{r.title}</strong>
+                  <p className={styles.reportDesc}>{r.description}</p>
+                  <span className={styles.reportMeta}>
+                    {t.dateLabel}: {new Date(r.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {reports.length === 0 && reportsFetched && !reportsLoading && (
+            <p className={styles.cardBody}>{t.noReports}</p>
+          )}
         </div>
       </section>
     </main>
