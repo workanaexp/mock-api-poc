@@ -14,26 +14,26 @@ export async function seedReports(): Promise<void> {
   if (reports.count() > 0) return
   await reports.create({
     id: 'r1',
-    title: 'Relatório de vendas Q1',
-    description: 'Resumo das vendas do primeiro trimestre',
+    title: 'Sales Reports - Q1',
+    description: 'Summary of sales for the first quarter',
     createdAt: '2025-01-15T10:00:00Z',
   })
   await reports.create({
     id: 'r2',
-    title: 'Relatório de vendas Q2',
-    description: 'Resumo das vendas do segundo trimestre',
+    title: 'Sales Reports - Q2',
+    description: 'Summary of sales for the second quarter',
     createdAt: '2025-04-15T10:00:00Z',
   })
   await reports.create({
     id: 'r3',
-    title: 'Auditoria interna',
-    description: 'Resultados da auditoria interna anual',
+    title: 'Internal Audit Reports - Annual',
+    description: 'Results of the annual internal audit',
     createdAt: '2025-02-20T14:30:00Z',
   })
   await reports.create({
     id: 'r4',
-    title: 'Relatório financeiro',
-    description: 'Balanço e demonstração de resultados',
+    title: 'Financial Reports - Balance Sheet and Income Statement',
+    description: 'Balance sheet and income statement',
     createdAt: '2025-03-01T09:00:00Z',
   })
 }

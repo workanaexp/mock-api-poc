@@ -62,7 +62,7 @@ function resolveDomainConfig(): DomainConfig {
       reports: {
         list: true,
         detail: false,
-        create: false,
+        create: true,
       },
     }
   }
