@@ -132,7 +132,7 @@ function App() {
     reportsTitle: language === 'en' ? 'Reports search (POC)' : 'Busca de relatórios (POC)',
     reportsDesc:
       language === 'en'
-        ? 'Mocked with MSW + @msw/data. Type a term (e.g. "vendas", "auditoria") and search.'
+        ? 'Mocked with MSW + @msw/data. Type a term (e.g. "sales", "audit", "report") and search.'
         : 'Mockado com MSW + @msw/data. Digite um termo (ex: "vendas", "auditoria") e busque.',
     searchPlaceholder: language === 'en' ? 'Search by title or description...' : 'Buscar por título ou descrição...',
     searchButton: language === 'en' ? 'Search' : 'Buscar',
