@@ -90,7 +90,8 @@ Current default mapping example implemented in `src/mocks/config/index.ts`:
 - `VITE_ENV=uat`:
   - mock `user:getUser`
   - mock `reports:list`
-  - do **not** mock `reports:detail` and `reports:create`
+  - mock `reports:create`
+  - do **not** mock `reports:detail`
 - `VITE_ENV=prod` (or `VITE_ENV=production`):
   - mock nothing (handlers are filtered out)
 - other values (local dev / test):

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import styles from './App.module.scss'
 
 type Language = 'en' | 'pt'
@@ -23,6 +23,22 @@ function App() {
   const [reports, setReports] = useState<Report[]>([])
   const [reportsLoading, setReportsLoading] = useState(false)
   const [reportsFetched, setReportsFetched] = useState(false)
+  const [newReportTitle, setNewReportTitle] = useState('')
+  const [includeDescription, setIncludeDescription] = useState(false)
+  const [newReportDescription, setNewReportDescription] = useState('')
+  const [createReportLoading, setCreateReportLoading] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const toastTimeoutRef = useRef<number | null>(null)
+
+  const showToast = (message: string) => {
+    setToastMessage(message)
+    if (toastTimeoutRef.current != null) {
+      window.clearTimeout(toastTimeoutRef.current)
+    }
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToastMessage(null)
+    }, 2500)
+  }
 
   const fetchUser = async () => {
     setLoading(true)
@@ -35,17 +51,68 @@ function App() {
     }
   }
 
-  const searchReports = async () => {
+  const searchReports = async (term?: string) => {
     setReportsLoading(true)
     setReportsFetched(true)
     try {
       const url = new URL('/api/reports', window.location.origin)
-      if (reportSearch.trim()) url.searchParams.set('search', reportSearch.trim())
+      const searchTerm = (term ?? reportSearch).trim()
+      if (searchTerm) url.searchParams.set('search', searchTerm)
       const response = await fetch(url.toString())
       const data = (await response.json()) as Report[]
       setReports(Array.isArray(data) ? data : [])
     } finally {
       setReportsLoading(false)
+    }
+  }
+
+  const handleSearchReportsClick = () => {
+    void searchReports()
+  }
+
+  const createReport = async () => {
+    const title = newReportTitle.trim()
+    if (!title) return
+
+    const description = includeDescription
+      ? newReportDescription.trim()
+      : ''
+
+    setCreateReportLoading(true)
+    try {
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+        }),
+      })
+
+      if (!response.ok) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to create report', await response.text())
+        return
+      }
+
+      setNewReportTitle('')
+      setIncludeDescription(false)
+      setNewReportDescription('')
+
+      // Remove the created report from the visible list on purpose.
+      // The user should use the search input to find what they just created.
+      setReportSearch('')
+      setReports([])
+      setReportsFetched(false)
+    } finally {
+      setCreateReportLoading(false)
+      showToast(
+        language === 'en'
+          ? 'Report created successfully'
+          : 'Relatório criado com sucesso',
+      )
     }
   }
 
@@ -65,16 +132,28 @@ function App() {
     reportsTitle: language === 'en' ? 'Reports search (POC)' : 'Busca de relatórios (POC)',
     reportsDesc:
       language === 'en'
-        ? 'Mocked with MSW + @msw/data. Type a term (e.g. "vendas", "auditoria") and search.'
+        ? 'Mocked with MSW + @msw/data. Type a term (e.g. "sales", "audit", "report") and search.'
         : 'Mockado com MSW + @msw/data. Digite um termo (ex: "vendas", "auditoria") e busque.',
     searchPlaceholder: language === 'en' ? 'Search by title or description...' : 'Buscar por título ou descrição...',
     searchButton: language === 'en' ? 'Search' : 'Buscar',
+    newReportTitlePlaceholder:
+      language === 'en' ? 'New report title...' : 'Título do novo relatório...',
+    saveReportButton: language === 'en' ? 'Save report' : 'Salvar relatório',
+    savingReportButton: language === 'en' ? 'Saving...' : 'Salvando...',
+    addDescriptionLabel: language === 'en' ? 'Add description' : 'Incluir descrição',
+    descriptionPlaceholder:
+      language === 'en' ? 'Description (optional)...' : 'Descrição (opcional)...',
     noReports: language === 'en' ? 'No reports found.' : 'Nenhum relatório encontrado.',
     dateLabel: language === 'en' ? 'Created' : 'Criado em',
   }
 
   return (
     <main className={styles.root}>
+      {toastMessage && (
+        <div className={styles.toast} role="status">
+          {toastMessage}
+        </div>
+      )}
       <header className={styles.header}>
         <div>
           <p className={styles.badge}>{t.badge}</p>
@@ -151,13 +230,13 @@ function App() {
               placeholder={t.searchPlaceholder}
               value={reportSearch}
               onChange={(e) => setReportSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && searchReports()}
+              onKeyDown={(e) => e.key === 'Enter' && void searchReports()}
               aria-label={t.searchPlaceholder}
             />
             <button
               type="button"
               className={styles.apiButton}
-              onClick={searchReports}
+              onClick={handleSearchReportsClick}
               disabled={reportsLoading}
             >
               {reportsLoading
@@ -167,6 +246,56 @@ function App() {
                 : t.searchButton}
             </button>
           </div>
+
+          <div className={styles.searchRow}>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder={t.newReportTitlePlaceholder}
+              value={newReportTitle}
+              onChange={(e) => setNewReportTitle(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && createReport()}
+              aria-label={t.newReportTitlePlaceholder}
+            />
+            <button
+              type="button"
+              className={styles.apiButton}
+              onClick={createReport}
+              disabled={createReportLoading}
+            >
+              {createReportLoading
+                ? language === 'en'
+                  ? t.savingReportButton
+                  : t.savingReportButton
+                : t.saveReportButton}
+            </button>
+          </div>
+
+          <div className={styles.searchRow}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={includeDescription}
+                onChange={(e) => setIncludeDescription(e.target.checked)}
+                aria-label={t.addDescriptionLabel}
+              />
+              {t.addDescriptionLabel}
+            </label>
+          </div>
+
+          {includeDescription && (
+            <div className={styles.searchRow}>
+              <textarea
+                className={styles.descriptionInput}
+                placeholder={t.descriptionPlaceholder}
+                value={newReportDescription}
+                onChange={(e) => setNewReportDescription(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && createReport()}
+                aria-label={t.descriptionPlaceholder}
+              />
+            </div>
+          )}
+
           {reports.length > 0 && (
             <ul className={styles.reportList} role="list">
               {reports.map((r) => (

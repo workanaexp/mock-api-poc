@@ -41,6 +41,9 @@ type DomainConfig = {
  */
 function resolveDomainConfig(): DomainConfig {
   const mode = import.meta.env.MODE
+  // env is an optional high-level environment selector used to decide
+  // which mocks are enabled (dev / uat / prod).
+  // If it's not provided, we fall back to Vite mode (development / production / custom).
   const env = (import.meta.env.VITE_ENV as string | undefined) ?? mode
 
   // Base config: whatever each domain file declares.
@@ -49,9 +52,8 @@ function resolveDomainConfig(): DomainConfig {
     reports: reportsMockConfig,
   }
 
-  // UAT: example of a stricter config.
-  // You can tweak this or even read specific envs here,
-  // e.g. VITE_MSW_REPORTS_LIST=true/false.
+  // UAT example: only enable a subset of mocks.
+  // e.g. VITE_ENV=uat
   if (env === 'uat') {
     return {
       user: {
@@ -60,12 +62,13 @@ function resolveDomainConfig(): DomainConfig {
       reports: {
         list: true,
         detail: false,
-        create: false,
+        create: true,
       },
     }
   }
 
   // Production: turn everything off by default.
+  // e.g. VITE_ENV=prod or Vite mode=production
   if (env === 'production' || env === 'prod') {
     return {
       user: {
